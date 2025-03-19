@@ -1,61 +1,12 @@
 import { Router } from "express";
 import axios from "axios";
 import { ChromaClient } from "chromadb";
+import { extractJsonBlock } from "../utils/extractJsonBlock";
+import { groupEmailByThread } from "../utils/groupEmailByThread";
 const client = new ChromaClient();
 
 const router = Router();
-function extractJsonBlock(text) {
-  const pattern = /```json([\s\S]*?)```/;
-  const match = text.match(pattern);
-  return match ? match[1].trim() : null;
-}
-function groupEmailByThread(emails) {
-  try {
-    if (!emails || emails.length === 0) {
-      return {};
-    }
-    let threads = {};
-    for (let email of emails) {
-      if (email.ThreadIdentifier in threads) {
-        threads[email.ThreadIdentifier].push(email);
-      } else {
-        threads[email.ThreadIdentifier] = [email];
-      }
-    }
-    let orderedEmailsByThread = {};
-    for (let thread in threads) {
-      let threadEmails = threads[thread];
-      let startEmail = null;
-      for (let email of threadEmails) {
-        if (email.ReplyToEmailMessageId == null) {
-          startEmail = email;
-          break;
-        }
-      }
-      if (startEmail == null) {
-        console.error("No start email found for thread", thread);
-        continue;
-      }
-      let orderedEmails = [];
-      let currentEmail = startEmail;
-      while (currentEmail != null) {
-        orderedEmails.push(currentEmail);
-        let nextEmailId = currentEmail.MessageIdentifier;
-        currentEmail = null;
-        for (let email of threadEmails) {
-          if (email.ReplyToEmailMessageId == nextEmailId) {
-            currentEmail = email;
-            break;
-          }
-        }
-      }
-      orderedEmailsByThread[thread] = orderedEmails;
-    }
-    return orderedEmailsByThread;
-  } catch (err) {
-    console.error("Error grouping emails by thread", err);
-  }
-}
+
 router.post("/nextSteps", async (req, res) => {
   try {
     const { opportunityId, emailDetails, contactDetails } = req.body;
