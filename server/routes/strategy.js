@@ -19,7 +19,7 @@ function executeQuery(query, binds = []) {
   });
 }
 
-router.post("/valueProposition", async (req, res) => {
+router.post("/strategy", async (req, res) => {
   try {
     const { accountName, accountInfo, opportunities, recentActivities } =
       req.body;
