@@ -1,27 +1,8 @@
 import { Router } from "express";
-import snowflake from "snowflake-sdk";
+import { snowflakeConnection } from "../index";
 
 const router = Router();
 
-try {
-  const snowflakeConnection = snowflake.createConnection({
-    account: "sqsksom-lc92516",
-    username: "JNJMAVLON",
-    password: "eufPWTrsknj!CG9",
-    role: "ACCOUNTADMIN",
-    clientSessionKeepAlive: true,
-  });
-
-  snowflakeConnection.connect((err, conn) => {
-    if (err) {
-      console.error("Failed to connect to Snowflake", err);
-    } else {
-      console.log("Connected to Snowflake.");
-    }
-  });
-} catch (err) {
-  console.error("Unable to connect to snowflake: " + err.message);
-}
 
 function executeQuery(query, binds = []) {
   return new Promise((resolve, reject) => {
