@@ -1,15 +1,16 @@
 import express from "express";
 import cors from "cors";
 import snowflake from "snowflake-sdk";
+import 'dotenv/config'
 import { ChromaClient } from "chromadb";
 
 const app = express();
 app.use(cors());
 
 export const snowflakeConnection = snowflake.createConnection({
-  account: "sqsksom-lc92516",
-  username: "JNJMAVLON",
-  password: "eufPWTrsknj!CG9",
+  account: process.env.SNOWFLAKEACCOUNT,
+  username: process.env.SNOWFLAKEUNAME,
+  password: process.env.SNOWFLAKEPASS,
   role: "ACCOUNTADMIN",
   clientSessionKeepAlive: true,
 });

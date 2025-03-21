@@ -38,7 +38,7 @@ router.post("/contactSummary", async (req, res) => {
           JSON.stringify(latestThreads),
       },
     ];
-    const openAiApiKey = "sk-proj-59wceY...";
+    const openAiApiKey = "your-openai-api-key";
     const payload = {
       model: "gpt-4o",
       messages: messages,

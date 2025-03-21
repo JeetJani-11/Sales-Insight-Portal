@@ -105,8 +105,7 @@ router.post("/accountDetails", async (req, res) => {
                     .json({ error: "Failed to fetch account details" });
                 }
                 if (rows && rows.length > 0) {
-                  const data = rows[0]; // assuming first row
-                  // Parse JSON fields if needed.
+                  const data = rows[0]; 
                   const account = data.ACCOUNT ? JSON.parse(data.ACCOUNT) : {};
                   const contacts = data.CONTACTS
                     ? JSON.parse(data.CONTACTS)
@@ -126,7 +125,6 @@ router.post("/accountDetails", async (req, res) => {
                     : [];
                   const owner = data.OWNER ? JSON.parse(data.OWNER) : {};
 
-                  // Group email messages by opportunity and contact.
                   const emailMessagesGroupedByOpportunity = {};
                   opportunities.forEach((o) => {
                     emailMessagesGroupedByOpportunity[o.ID] = [];
@@ -160,11 +158,6 @@ router.post("/accountDetails", async (req, res) => {
                     owner,
                   };
 
-                  redisClient.setex(
-                    cacheKey,
-                    30 * 60,
-                    JSON.stringify(accountDetails)
-                  );
                   console.log(
                     "Successfully fetched account details from Snowflake for",
                     accountName
