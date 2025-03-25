@@ -1,9 +1,14 @@
 import { Router } from "express";
 import axios from "axios";
-import { snowflakeConnection } from "../index";
-import { extractJsonBlock } from "../utils/extractJsonBlock";
+import { snowflakeConnection } from "../index.js";
+import { extractJsonBlock } from "../utils/extractJsonBlock.js";
+import { ChromaClient } from "chromadb";
+import { Openperplex } from "openperplex-js";
 
+const client = new Openperplex(process.env.OPENPREPLEX);
+const chromaClient = new ChromaClient();
 const router = Router();
+
 function executeQuery(query, binds = []) {
   return new Promise((resolve, reject) => {
     snowflakeConnection.execute({
@@ -23,34 +28,24 @@ router.post("/strategy", async (req, res) => {
   try {
     const { accountName, accountInfo, opportunities, recentActivities } =
       req.body;
-    const perplexityApiKey =
-      "perplexity-api-key"; 
-    const perplexityUrl = "https://api.perplexity.ai/chat/completions";
-    const perplexityPayload = {
-      model: "llama-3.1-sonar-small-128k-online",
-      messages: [
-        {
-          role: "user",
-          content: `We are an industrial company that ##Product Info##  to the company called ${accountName}. Analayze all the recent updates and now analayze all my recent conversation with these account. Give me a conscise strategy in order to close this opportunity.  Can you provide me with a stratergy for the product based on what company does? Here is the information about the company: ${accountInfo}.Here is the information about the opportunities: ${opportunities}.Here is the information about the recent activities: ${recentActivities}`,
-        },
-      ],
-      stream: false,
-    };
-    const perplexityHeaders = {
-      Authorization: `Bearer ${perplexityApiKey}`,
-      "Content-Type": "application/json",
-    };
-
-    const perplexityResponse = await axios.post(
-      perplexityUrl,
-      perplexityPayload,
-      { headers: perplexityHeaders }
+  
+    const result = await client.search(
+      `We are an industrial company that ##Product Info##  to the company called ${accountName}. Analayze all the recent updates and now analayze all my recent conversation with these account. Give me a conscise strategy in order to close this opportunity.  Can you provide me with a stratergy for the product based on what company does? Here is the information about the company: ${accountInfo}.Here is the information about the opportunities: ${opportunities}.Here is the information about the recent activities: ${recentActivities}`,
+      {
+        date_context: "today is 23 March 2025 and the time is 1 PM",
+        location: "us",
+        model: "gpt-4o-mini",
+        response_language: "auto",
+        answer_type: "text",
+        search_type: "news",
+        return_citations: false,
+        return_sources: false,
+        return_images: false,
+        recency_filter: "month",
+      }
     );
-    const choices = perplexityResponse.data.choices;
-    let messagesVP = "";
-    choices.forEach((choice) => {
-      messagesVP += (choice.message && choice.message.content) || "";
-    });
+
+    let messagesVP = result.llm_response;
 
     await executeQuery("USE DATABASE PC_FIVETRAN_DB");
     await executeQuery("USE WAREHOUSE PC_FIVETRAN_WH");
@@ -68,18 +63,20 @@ router.post("/strategy", async (req, res) => {
       data = oppRows;
     }
 
-    const collection = await client.getOrCreateCollection("value_proposition");
+    const collection = await chromaClient.getOrCreateCollection({
+      name: "value_proposition",
+    });
     const documents = data.map((doc) => JSON.stringify(doc));
     const ids = data.map((_, i) => String(i));
-    await collection.add({ documents, ids });
+    await collection.upsert({ documents, ids });
 
     const queryResults = await collection.query({
-      query_texts: [
+      queryTexts: [
         `Which opportunity is closed and related to the account similar to the company ${accountName}`,
       ],
       n_results: data.length < 3 ? data.length : 3,
     });
-    
+
     const docsResult = queryResults.documents ? queryResults.documents[0] : [];
     const opportunitiesFromDB = docsResult.map((doc) => JSON.parse(doc));
     const oppIds = opportunitiesFromDB.map((o) => o.OPPORTUNITY_ID);
@@ -129,18 +126,16 @@ router.post("/strategy", async (req, res) => {
           )}`,
         },
       ];
-
-      const openAiApiKey =
-        "openai-api-key";
       try {
         const openAiPayload = {
-          model: "gpt-4o",
+          model: "deepseek/deepseek-chat-v3-0324:free",
           messages: messages,
-          temperature: 0.5,
         };
-        const openAiHeaders = { Authorization: `Bearer ${openAiApiKey}` };
+        const openAiHeaders = {
+          Authorization: `Bearer ${process.env.OPENROUTERDEEPSEEK}`,
+        };
         const openAiResponse = await axios.post(
-          "https://api.openai.com/v1/chat/completions",
+          "https://openrouter.ai/api/v1/chat/completions",
           openAiPayload,
           { headers: openAiHeaders }
         );
@@ -178,3 +173,5 @@ router.post("/strategy", async (req, res) => {
     return res.json({ error: "Failed to fetch value proposition" });
   }
 });
+
+export default router;

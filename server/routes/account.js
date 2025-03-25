@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { snowflakeConnection } from "../index";
+import { snowflakeConnection } from "../index.js";
 
 const router = Router();
 
 router.post("/accountDetails", async (req, res) => {
   try {
-    const accountName = req.body.accountName;
+    const { accountName } = req.body;
+    console.log("Fetching account details for", accountName);
     const cacheKey = `analytics:accountDetails-${accountName}`;
 
     snowflakeConnection.execute({
@@ -26,7 +27,7 @@ router.post("/accountDetails", async (req, res) => {
                   WITH AccountData AS (
                         SELECT * 
                         FROM PC_FIVETRAN_DB.SALESFORCE.ACCOUNT 
-                        WHERE NAME = ${accountName}
+                        WHERE NAME = '${accountName}'
                     ),
                     EmailContacts AS (
                         SELECT 
@@ -41,7 +42,9 @@ router.post("/accountDetails", async (req, res) => {
                                     'To', em.TO_ADDRESS,
                                     'Date', em.MESSAGE_DATE,
                                     'OpportunityId', em.RELATED_TO_ID,
-                                    'ThreadId', em.THREAD_IDENTIFIER
+                                    'ThreadId', em.THREAD_IDENTIFIER,
+                                    'RelatedToId', em.RELATED_TO_ID,
+                                    'ReplyToEmailMessageId', em.REPLY_TO_EMAIL_MESSAGE_ID
                                 )
                             ) AS EMAILS
                         FROM PC_FIVETRAN_DB.SALESFORCE.EMAIL_MESSAGE_RELATION emr
@@ -55,6 +58,21 @@ router.post("/accountDetails", async (req, res) => {
                             WHERE ACCOUNT_ID = (SELECT ID FROM AccountData)
                         )
                         GROUP BY c.ACCOUNT_ID, c.ID
+                    ),
+                    Events AS (
+                        SELECT 
+                            ACCOUNT_ID,
+                            ARRAY_AGG(OBJECT_CONSTRUCT(*)) AS events
+                        FROM PC_FIVETRAN_DB.SALESFORCE.EVENT 
+                        WHERE ACCOUNT_ID = (SELECT ID FROM AccountData)
+                        GROUP BY ACCOUNT_ID
+                    ),
+                    Owner AS (
+                        SELECT 
+                            ad.ID AS account_id,
+                            OBJECT_CONSTRUCT(u.*) AS owner
+                        FROM PC_FIVETRAN_DB.SALESFORCE.USER u
+                        JOIN AccountData ad ON u.ID = ad.OWNER_ID
                     )
                     SELECT
                         OBJECT_CONSTRUCT(
@@ -68,11 +86,12 @@ router.post("/accountDetails", async (req, res) => {
                             ),
                             'Contacts', COALESCE(ANY_VALUE(c.contacts), ARRAY_CONSTRUCT()),
                             'Opportunities', COALESCE(ANY_VALUE(op.opportunities), ARRAY_CONSTRUCT()),
-                            'Emails',  COALESCE(
-                                    OBJECT_AGG(ec.CONTACT_ID, ec.EMAILS),
-                                    OBJECT_CONSTRUCT()
-                                )
-                            
+                            'Emails', COALESCE(
+                                OBJECT_AGG(ec.CONTACT_ID, ec.EMAILS),
+                                OBJECT_CONSTRUCT()
+                            ),
+                            'Events', COALESCE(ANY_VALUE(ev.events), ARRAY_CONSTRUCT()),
+                            'Owner', COALESCE(ANY_VALUE(own.owner), OBJECT_CONSTRUCT())
                         ) AS result
                     FROM AccountData ad
                     LEFT JOIN (
@@ -89,8 +108,9 @@ router.post("/accountDetails", async (req, res) => {
                         FROM PC_FIVETRAN_DB.SALESFORCE.OPPORTUNITY
                         GROUP BY ACCOUNT_ID
                     ) op ON ad.ID = op.ACCOUNT_ID
-                    LEFT JOIN EmailContacts ec
-                        ON ad.ID = ec.ACCOUNT_ID
+                    LEFT JOIN EmailContacts ec ON ad.ID = ec.ACCOUNT_ID
+                    LEFT JOIN Events ev ON ad.ID = ev.ACCOUNT_ID
+                    LEFT JOIN Owner own ON ad.ID = own.account_id
                     GROUP BY ad.ID;
 
                 `;
@@ -98,6 +118,7 @@ router.post("/accountDetails", async (req, res) => {
               sqlText: query,
               binds: [accountName],
               complete: (err, stmt, rows) => {
+                console.log(rows);
                 if (err) {
                   console.error("Error executing query:", err);
                   return res
@@ -105,33 +126,24 @@ router.post("/accountDetails", async (req, res) => {
                     .json({ error: "Failed to fetch account details" });
                 }
                 if (rows && rows.length > 0) {
-                  const data = rows[0]; 
-                  const account = data.ACCOUNT ? JSON.parse(data.ACCOUNT) : {};
-                  const contacts = data.CONTACTS
-                    ? JSON.parse(data.CONTACTS)
-                    : [];
-                  const events = data.EVENTS ? JSON.parse(data.EVENTS) : [];
-                  const uniqueEmailMessages = data.UNIQUE_EMAIL_MESSAGES
-                    ? JSON.parse(data.UNIQUE_EMAIL_MESSAGES)
-                    : [];
-                  const uniqueEmailMessagesGroupedByContact =
-                    data.UNIQUE_EMAIL_MESSAGES_GROUPED_BY_CONTACT
-                      ? JSON.parse(
-                          data.UNIQUE_EMAIL_MESSAGES_GROUPED_BY_CONTACT
-                        )
-                      : [];
-                  const opportunities = data.OPPORTUNITIES
-                    ? JSON.parse(data.OPPORTUNITIES)
-                    : [];
-                  const owner = data.OWNER ? JSON.parse(data.OWNER) : {};
-
+                  const data = rows[0];
+                  const account = data.RESULT.Account;
+                  const contacts = data.RESULT.Contacts;
+                  const events = data.RESULT.Events;
+                  const emailMessagesGroupedByContact = data.RESULT.Emails;
+                  const opportunities = data.RESULT.Opportunities;
+                  const owner = data.RESULT.Owner;
+                  // console.log("uniqueEmailMessages",  uniqueEmailMessages);
+                  const uniqueEmailMessages = [];
+                  Object.keys(emailMessagesGroupedByContact).forEach((key) => {
+                    const emails = emailMessagesGroupedByContact[key];
+                    emails.forEach((email) => {
+                      uniqueEmailMessages.push(email);
+                    });
+                  });
                   const emailMessagesGroupedByOpportunity = {};
                   opportunities.forEach((o) => {
                     emailMessagesGroupedByOpportunity[o.ID] = [];
-                  });
-                  const emailMessagesGroupedByContact = {};
-                  contacts.forEach((c) => {
-                    emailMessagesGroupedByContact[c.ID] = [];
                   });
                   uniqueEmailMessages.forEach((email) => {
                     const opportunityId = email.RelatedToId;
@@ -139,12 +151,6 @@ router.post("/accountDetails", async (req, res) => {
                       emailMessagesGroupedByOpportunity[opportunityId].push(
                         email
                       );
-                    }
-                  });
-                  uniqueEmailMessagesGroupedByContact.forEach((email) => {
-                    const contactId = email.RelationId;
-                    if (emailMessagesGroupedByContact[contactId]) {
-                      emailMessagesGroupedByContact[contactId].push(email);
                     }
                   });
 
@@ -180,3 +186,5 @@ router.post("/accountDetails", async (req, res) => {
     });
   }
 });
+
+export default router;

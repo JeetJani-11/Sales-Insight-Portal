@@ -1,16 +1,16 @@
 import { Router } from "express";
 import axios from "axios";
 import { ChromaClient } from "chromadb";
-import { extractJsonBlock } from "../utils/extractJsonBlock";
-import { groupEmailByThread } from "../utils/groupEmailByThread";
+import { extractJsonBlock } from "../utils/extractJsonBlock.js";
+import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
 const client = new ChromaClient();
 
 const router = Router();
 
 router.post("/nextSteps", async (req, res) => {
   try {
-    const { opportunityId, emailDetails, contactDetails } = req.body;
-    const orderedEmailsByThread = groupEmailByThread(emailDetails);
+    const { opportunityId, emailMessages, contactDetails } = req.body;
+    const orderedEmailsByThread = groupEmailsByThread(emailMessages);
     let conversations = [];
     for (let thread in orderedEmailsByThread) {
       let emails = orderedEmailsByThread[thread];
@@ -19,7 +19,7 @@ router.post("/nextSteps", async (req, res) => {
         const role = contactDetails.some((i) => i.EMAIL === email.FromAddress)
           ? "customer"
           : "salesAgent";
-        conversation += `${role}: ${email.TextBody}\n`;
+        conversation += `${role}: ${email.Body}\n`;
         conversations.push(conversation);
       }
       const collection = await client.getOrCreateCollection({
@@ -56,16 +56,15 @@ router.post("/nextSteps", async (req, res) => {
       ];
       try {
         let payload = {
-          model: "gpt-4o",
+          model: "deepseek/deepseek-chat-v3-0324:free",
           messages: messages,
-          temperature: 0.5,
         };
         let headers = {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENROUTERDEEPSEEK}`,
           "Content-Type": "application/json",
         };
         let response = await axios.post(
-          "https://api.openai.com/v1/engines/davinci-codex/completions",
+          "https://openrouter.ai/api/v1/chat/completions",
           payload,
           { headers: headers }
         );
@@ -102,3 +101,5 @@ router.post("/nextSteps", async (req, res) => {
     return res.status(500).json({ error: "Failed to get next steps" });
   }
 });
+
+export default router;

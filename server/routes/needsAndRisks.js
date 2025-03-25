@@ -1,11 +1,13 @@
 import { Router } from "express";
 import axios from "axios";
 import { ChromaClient } from "chromadb";
-import { extractJsonBlock } from "../utils/extractJsonBlock";
-import { groupEmailsByThread } from "../utils/groupEmailsByThread";
-const router = Router();
+import { extractJsonBlock } from "../utils/extractJsonBlock.js";
+import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
 
+const router = Router();
 const client = new ChromaClient();
+const openRouterApiKey = process.env.OPENROUTERDEEPSEEK;
+
 router.post("/needsAndRisk", async (req, res) => {
   try {
     const emailDetails = req.body.emailMessages;
@@ -14,30 +16,31 @@ router.post("/needsAndRisk", async (req, res) => {
     let finalConversationsforNeeds = [];
     let finalConversationsforRisk = [];
 
-    const openAiApiKey = "your-openai-api-key";
-
     if (emailDetails && emailDetails.length !== 0) {
       const conversations = [];
       Object.keys(emailGroupByThreadIdentifier).forEach((threadId) => {
         const emails = emailGroupByThreadIdentifier[threadId];
         let conversation = "";
         emails.forEach((email) => {
+
           const role = contactDetails.some((i) => i.EMAIL === email.FromAddress)
             ? "customer"
             : "salesAgent";
-          conversation += `${role}: ${email.TextBody}\n`;
+          conversation += `${role}: ${email.Body}\n`;
         });
         conversations.push(conversation);
       });
 
-      const collection = await client.getOrCreateCollection("needs_risk");
+      const collection = await client.getOrCreateCollection({
+        name: "needs_risk",
+      });
       await collection.upsert({
         documents: conversations,
         ids: Array.from({ length: conversations.length }, (_, i) => String(i)),
       });
 
       const resultsForRisk = await collection.query({
-        query_texts: ["what are the Churn Risk in the conversation"],
+        queryTexts: ["what are the Churn Risk in the conversation"],
         n_results: conversations.length < 3 ? conversations.length : 3,
       });
       if (!resultsForRisk.ids || resultsForRisk.ids.length === 0) {
@@ -52,7 +55,7 @@ router.post("/needsAndRisk", async (req, res) => {
       });
 
       const resultsForNeeds = await collection.query({
-        query_texts: ["what are the Needs of customer in the conversation"],
+        queryTexts: ["what are the Needs of customer in the conversation"],
         n_results: conversations.length < 3 ? conversations.length : 3,
       });
       if (!resultsForNeeds.ids || resultsForNeeds.ids.length === 0) {
@@ -66,7 +69,7 @@ router.post("/needsAndRisk", async (req, res) => {
         finalConversationsforNeeds.push(conversations[parseInt(result)]);
       });
 
-      await client.deleteCollection("needs_risk");
+      await client.deleteCollection({ name: "needs_risk" });
     }
 
     const messages = [
@@ -83,13 +86,12 @@ router.post("/needsAndRisk", async (req, res) => {
 
     try {
       const payload = {
-        model: "gpt-4o",
+        model: "deepseek/deepseek-chat-v3-0324:free",
         messages: messages,
-        temperature: 0.5,
       };
-      const headers = { Authorization: `Bearer ${openAiApiKey}` };
+      const headers = { Authorization: `Bearer ${openRouterApiKey}` };
       const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
+        "https://openrouter.ai/api/v1/chat/completions",
         payload,
         { headers }
       );
@@ -140,4 +142,4 @@ router.post("/needsAndRisk", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

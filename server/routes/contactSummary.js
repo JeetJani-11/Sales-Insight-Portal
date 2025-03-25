@@ -1,8 +1,9 @@
 import { Router } from "express";
 import axios from "axios";
-import { groupEmailsByThread } from "../utils/groupEmailsByThread";
+import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
 
 const router = Router();
+const openRouterApiKey = process.env.OPENROUTERDEEPSEEK;
 
 router.post("/contactSummary", async (req, res) => {
   try {
@@ -38,19 +39,18 @@ router.post("/contactSummary", async (req, res) => {
           JSON.stringify(latestThreads),
       },
     ];
-    const openAiApiKey = "your-openai-api-key";
     const payload = {
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: messages,
       temperature: 0.5,
     };
     const headers = {
-      Authorization: `Bearer ${openAiApiKey}`,
+      Authorization: `Bearer ${openRouterApiKey}`,
       "Content-Type": "application/json",
     };
 
     const openAiResponse = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
+      "https://openrouter.ai/api/v1/chat/completions",
       payload,
       { headers }
     );
@@ -64,12 +64,6 @@ router.post("/contactSummary", async (req, res) => {
           : "");
     });
 
-    await redisClient.set(
-      cacheKey,
-      JSON.stringify({ update: updates }),
-      "EX",
-      30 * 60
-    );
     console.log("Successfully fetched contact summary for", contactInfo.ID);
     return res.json({ update: updates });
   } catch (e) {
@@ -77,3 +71,5 @@ router.post("/contactSummary", async (req, res) => {
     return res.json({ error: "Failed to fetch value proposition" });
   }
 });
+
+export default router;

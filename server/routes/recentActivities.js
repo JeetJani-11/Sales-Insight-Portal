@@ -1,7 +1,7 @@
 import { Router } from "express";
 import axios from "axios";
-import { extractJsonBlock } from "../utils/extractJsonBlock";
-import { groupEmailsByThread } from "../utils/groupEmailsByThread";
+import { extractJsonBlock } from "../utils/extractJsonBlock.js";
+import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
 const router = Router();
 
 router.post("/recentActivities", async (req, res) => {
@@ -19,7 +19,6 @@ router.post("/recentActivities", async (req, res) => {
         emails,
       });
     }
-
     latestThreads.sort((a, b) => {
       const dateA = new Date(a.lastEmailDate.slice(0, -6));
       const dateB = new Date(b.lastEmailDate.slice(0, -6));
@@ -41,7 +40,6 @@ router.post("/recentActivities", async (req, res) => {
       return dateB - dateA;
     });
     const recentEvents = filteredEvents.slice(0, 3);
-
     const messageContent = `I am sales agent for the company called ${accountName}. Can you provide me with the recent activities of the deal? Here is the information about the email you are researching: ${JSON.stringify(
       latestThreads
     )} ${JSON.stringify(
@@ -55,16 +53,16 @@ router.post("/recentActivities", async (req, res) => {
       },
     ];
 
-    const openAiApiKey = "your-openai-api-key";
     const payload = {
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: messages,
-      temperature: 0.5,
     };
-    const headers = { Authorization: `Bearer ${openAiApiKey}` };
+    const headers = {
+      Authorization: `Bearer ${process.env.OPENROUTERDEEPSEEK}`,
+    };
 
     const openAiRes = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
+      "https://openrouter.ai/api/v1/chat/completions",
       payload,
       { headers }
     );
@@ -99,3 +97,5 @@ router.post("/recentActivities", async (req, res) => {
     return res.json({ error: "Failed to fetch recent activities" });
   }
 });
+
+export default router;

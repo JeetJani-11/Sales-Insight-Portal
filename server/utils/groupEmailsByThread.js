@@ -2,7 +2,7 @@ export function groupEmailsByThread(emailMessages) {
   try {
     const threads = {};
     emailMessages.forEach((email) => {
-      const threadId = email["ThreadIdentifier"];
+      const threadId = email["ThreadId"];
       if (threadId) {
         if (!threads[threadId]) threads[threadId] = [];
         threads[threadId].push(email);
@@ -28,7 +28,7 @@ export function groupEmailsByThread(emailMessages) {
       let currentEmail = startEmail;
       while (currentEmail) {
         orderedEmails.push(currentEmail);
-        const replyToId = currentEmail["MessageIdentifier"];
+        const replyToId = currentEmail["EmailId"];
         let nextEmail = null;
         for (const email of emails) {
           if (email["ReplyToEmailMessageId"] === replyToId) {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { snowflakeConnection } from "../index";
+import { snowflakeConnection } from "../index.js";
 
 const router = Router();
 
@@ -47,3 +47,4 @@ router.post("/search", async (req, res) => {
   }
 });
 
+export default router;

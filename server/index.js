@@ -2,10 +2,27 @@ import express from "express";
 import cors from "cors";
 import snowflake from "snowflake-sdk";
 import 'dotenv/config'
+import AccountRouter from "./routes/account.js";
+import NeedsAndRiskRouter from "./routes/needsAndRisks.js";
+import RecentUpdates from "./routes/recentUpdates.js";
+import ContactSummaryRouter from "./routes/contactSummary.js";
+import NextStepsRouter from "./routes/nextSteps.js";
+import RecentActivitiesRouter from "./routes/recentActivities.js";
+import SearchRouter from "./routes/search.js";
+import StrategyRouter from "./routes/strategy.js";
 import { ChromaClient } from "chromadb";
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+app.use(AccountRouter);
+app.use(NeedsAndRiskRouter);
+app.use(RecentUpdates);
+app.use(ContactSummaryRouter);
+app.use(NextStepsRouter);
+app.use(RecentActivitiesRouter);
+app.use(SearchRouter);
+app.use(StrategyRouter);
 
 export const snowflakeConnection = snowflake.createConnection({
   account: process.env.SNOWFLAKEACCOUNT,
