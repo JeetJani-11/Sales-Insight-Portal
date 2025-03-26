@@ -6,6 +6,13 @@ const client = new Openperplex(process.env.OPENPREPLEX);
 router.get("/recentUpdates", async (req, res) => {
   try {
     let accountName = req.query.accountName;
+    const cacheKey = `analytics:recentUpdates:${accountName}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for", accountName);
+      return res.json(JSON.parse(cachedResult));
+    }
     const result = await client.search(
       `Give me all the latest news/update for the company called ${accountName}`,
       {
@@ -21,6 +28,17 @@ router.get("/recentUpdates", async (req, res) => {
         recency_filter: "month",
       }
     );
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify({
+        updates: result.sources,
+      }),
+      {
+        EX: 60 * 60 * 24 * 1000,
+      }
+    );
+
     return res.json({
       updates: result.sources,
     });

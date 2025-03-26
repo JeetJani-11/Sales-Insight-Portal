@@ -3,6 +3,7 @@ import axios from "axios";
 import { ChromaClient } from "chromadb";
 import { extractJsonBlock } from "../utils/extractJsonBlock.js";
 import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
+import { redisClient } from "../index.js";
 const client = new ChromaClient();
 
 const router = Router();
@@ -10,6 +11,14 @@ const router = Router();
 router.post("/nextSteps", async (req, res) => {
   try {
     const { opportunityId, emailMessages, contactDetails } = req.body;
+
+    const cacheKey = `analytics:nextSteps:${opportunityId}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for Next Steps", opportunityId);
+      return res.json(JSON.parse(cachedResult));
+    }
     const orderedEmailsByThread = groupEmailsByThread(emailMessages);
     let conversations = [];
     for (let thread in orderedEmailsByThread) {
@@ -90,6 +99,14 @@ router.post("/nextSteps", async (req, res) => {
           nextSteps = messageContent.nextSteps;
           summary = messageContent.summary;
         }
+        await redisClient.set(
+          cacheKey,
+          JSON.stringify({ nextSteps, summary }),
+          {
+            EX: 60 * 60 * 24 * 1000,
+          }
+        );
+
         return res.json({ nextSteps, summary });
       } catch (err) {
         console.error("Error getting next steps", err);

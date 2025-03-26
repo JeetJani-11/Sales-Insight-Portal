@@ -1,6 +1,7 @@
 import { Router } from "express";
 import axios from "axios";
 import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
+import { redisClient } from "../index.js";
 
 const router = Router();
 const openRouterApiKey = process.env.OPENROUTERDEEPSEEK;
@@ -9,6 +10,13 @@ router.post("/contactSummary", async (req, res) => {
   try {
     const emailMessages = req.body.emailMessages;
     const contactInfo = req.body.contact;
+    const cacheKey = `analytics:contactSummary:${contactInfo.ID}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for Contact Summary", contactInfo.FIRST_NAME);
+      return res.json(JSON.parse(cachedResult));
+    }
     const emailMessagesGroupedByThread = groupEmailsByThread(emailMessages);
     let latestThreads = [];
     for (const threadId in emailMessagesGroupedByThread) {
@@ -65,7 +73,11 @@ router.post("/contactSummary", async (req, res) => {
     });
 
     console.log("Successfully fetched contact summary for", contactInfo.ID);
-    return res.json({ update: updates });
+    await redisClient.set(cacheKey, JSON.stringify({ updates }), {
+      EX: 60 * 60 * 24 * 1000,
+    });
+
+    return res.json({ updates });
   } catch (e) {
     console.error("Failed to fetch contact summary", e);
     return res.json({ error: "Failed to fetch value proposition" });

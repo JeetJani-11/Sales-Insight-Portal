@@ -3,6 +3,7 @@ import axios from "axios";
 import { ChromaClient } from "chromadb";
 import { extractJsonBlock } from "../utils/extractJsonBlock.js";
 import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
+import { redisClient } from "../index.js";
 
 const router = Router();
 const client = new ChromaClient();
@@ -10,8 +11,16 @@ const openRouterApiKey = process.env.OPENROUTERDEEPSEEK;
 
 router.post("/needsAndRisk", async (req, res) => {
   try {
+    const opportunityId = req.body.opportunityId;
     const emailDetails = req.body.emailMessages;
     const contactDetails = req.body.contacts;
+    const cacheKey = `analytics:needsAndRisk:${opportunityId}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for Needs and Risk", accountInfo.Name);
+      return res.json(JSON.parse(cachedResult));
+    }
     const emailGroupByThreadIdentifier = groupEmailsByThread(emailDetails);
     let finalConversationsforNeeds = [];
     let finalConversationsforRisk = [];
@@ -22,7 +31,6 @@ router.post("/needsAndRisk", async (req, res) => {
         const emails = emailGroupByThreadIdentifier[threadId];
         let conversation = "";
         emails.forEach((email) => {
-
           const role = contactDetails.some((i) => i.EMAIL === email.FromAddress)
             ? "customer"
             : "salesAgent";
@@ -131,6 +139,9 @@ router.post("/needsAndRisk", async (req, res) => {
         riskDetail,
       };
 
+      await redisClient.set(cacheKey, JSON.stringify(needsAndRisks), {
+        EX: 60 * 60 * 24 * 1000,
+      });
       return res.json(needsAndRisks);
     } catch (err) {
       console.error("Failed to call OpenAI for Needs and Risk.", err);

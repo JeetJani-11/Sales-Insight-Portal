@@ -7,6 +7,13 @@ const router = Router();
 router.post("/recentActivities", async (req, res) => {
   try {
     const { accountName, emailMessages, events } = req.body;
+    const cacheKey = `analytics:recentActivities:${accountName}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for", accountName);
+      return res.json(JSON.parse(cachedResult));
+    }
     const emailMessagesGroupedByThread = groupEmailsByThread(emailMessages);
     let latestThreads = [];
     for (const threadId in emailMessagesGroupedByThread) {
@@ -89,6 +96,10 @@ router.post("/recentActivities", async (req, res) => {
       }
       updates = updates.concat(update);
     }
+
+    await redisClient.set(cacheKey, JSON.stringify({ updates }), {
+      EX: 60 * 60 * 24 * 1000,
+    });
 
     console.log("Successfully fetched recent activities for", accountName);
     return res.json({ updates: updates });

@@ -28,7 +28,14 @@ router.post("/strategy", async (req, res) => {
   try {
     const { accountName, accountInfo, opportunities, recentActivities } =
       req.body;
-  
+
+    const cacheKey = `analytics:strategy:${accountName}`;
+
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for", accountName);
+      return res.json(JSON.parse(cachedResult));
+    }
     const result = await client.search(
       `We are an industrial company that ##Product Info##  to the company called ${accountName}. Analayze all the recent updates and now analayze all my recent conversation with these account. Give me a conscise strategy in order to close this opportunity.  Can you provide me with a stratergy for the product based on what company does? Here is the information about the company: ${accountInfo}.Here is the information about the opportunities: ${opportunities}.Here is the information about the recent activities: ${recentActivities}`,
       {
@@ -167,6 +174,18 @@ router.post("/strategy", async (req, res) => {
         return res.json({ error: "Something went wrong." });
       }
     }
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify({
+        stratergy: messagesVP,
+        insights: insights,
+      }),
+      {
+        EX: 60 * 60 * 24 * 1000,
+      }
+    );
+
     return res.json({ stratergy: messagesVP, insights: insights });
   } catch (e) {
     console.error("Failed to fetch value proposition:", e);

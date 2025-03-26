@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { snowflakeConnection } from "../index.js";
+import { redisClient } from "../index.js";
 
 const router = Router();
 
@@ -9,6 +10,11 @@ router.post("/accountDetails", async (req, res) => {
     console.log("Fetching account details for", accountName);
     const cacheKey = `analytics:accountDetails-${accountName}`;
 
+    const cachedResult = await redisClient.get(cacheKey);
+    if (cachedResult) {
+      console.log("Cache hit for", accountName);
+      return res.json(JSON.parse(cachedResult));
+    }
     snowflakeConnection.execute({
       sqlText: "USE DATABASE PC_FIVETRAN_DB",
       complete: (err) => {
@@ -117,7 +123,7 @@ router.post("/accountDetails", async (req, res) => {
             snowflakeConnection.execute({
               sqlText: query,
               binds: [accountName],
-              complete: (err, stmt, rows) => {
+              complete: async (err, stmt, rows) => {
                 console.log(rows);
                 if (err) {
                   console.error("Error executing query:", err);
@@ -163,6 +169,14 @@ router.post("/accountDetails", async (req, res) => {
                     emailMessagesGroupedByContact,
                     owner,
                   };
+
+                  await redisClient.set(
+                    cacheKey,
+                    JSON.stringify(accountDetails),
+                    {
+                      EX: 60*60*24*1000,
+                    }
+                  );
 
                   console.log(
                     "Successfully fetched account details from Snowflake for",

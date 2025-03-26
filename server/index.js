@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import snowflake from "snowflake-sdk";
-import 'dotenv/config'
+import "dotenv/config";
 import AccountRouter from "./routes/account.js";
 import NeedsAndRiskRouter from "./routes/needsAndRisks.js";
 import RecentUpdates from "./routes/recentUpdates.js";
@@ -10,7 +10,20 @@ import NextStepsRouter from "./routes/nextSteps.js";
 import RecentActivitiesRouter from "./routes/recentActivities.js";
 import SearchRouter from "./routes/search.js";
 import StrategyRouter from "./routes/strategy.js";
+import { createClient } from "redis";
 import { ChromaClient } from "chromadb";
+
+const redisClient = createClient({
+  username: "default",
+  password: process.env.REDISPASS,
+  socket: {
+    host: process.env.REDISHOST,
+    port: 16950,
+  },
+});
+redisClient.on("error", (err) => console.log("Redis Client Error", err));
+
+await redisClient.connect();
 
 const app = express();
 app.use(cors());
@@ -32,7 +45,6 @@ export const snowflakeConnection = snowflake.createConnection({
   clientSessionKeepAlive: true,
 });
 
-
 snowflakeConnection.connect((err, conn) => {
   if (err) {
     console.error("Failed to connect to Snowflake", err);
@@ -44,3 +56,5 @@ snowflakeConnection.connect((err, conn) => {
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
 });
+
+export { redisClient };
