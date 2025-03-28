@@ -18,8 +18,8 @@ export function ActivityList({ activities, contact }) {
 
   const filteredActivities = activities.filter((activity) => {
     if (filter === "all") return true;
-    if (filter === "meeting") return !activity.MessageIdentifier;
-    if (filter === "email") return !!activity.MessageIdentifier;
+    if (filter === "meeting") return !activity.EmailId;
+    if (filter === "email") return !!activity.EmailId;
     return true;
   });
   console.log(filteredActivities);
@@ -39,7 +39,7 @@ export function ActivityList({ activities, contact }) {
       <div className="space-y-4">
         {filteredActivities.map((activity, index) => (
           <div key={index} className="flex items-start gap-3">
-            {activity.MessageIdentifier ? (
+            {activity.EmailId ? (
               <>
                 <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div className="flex-1 min-w-0">
@@ -55,11 +55,11 @@ export function ActivityList({ activities, contact }) {
                     ))}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {formatDate(activity.MessageDate)}
+                    {formatDate(activity.Date)}
                   </p>
                 </div>
                 <span className="text-sm text-gray-500 whitespace-nowrap">
-                  {formatDate(activity.MessageDate)}
+                  {formatDate(activity.Date)}
                 </span>
               </>
             ) : (

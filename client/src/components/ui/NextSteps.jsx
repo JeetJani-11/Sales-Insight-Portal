@@ -24,7 +24,7 @@ export default function NextSteps() {
               <div className="space-y-2">
                 <span className="text-lg font-medium text-black">Action Items</span>
                 <ul className="space-y-2 text-sm text-gray-500">
-                  {nextSteps.next_steps.map((item, index) => (
+                  {nextSteps.nextSteps.map((item, index) => (
                     <li className="flex items-center gap-2" key={index}>
                       <div
                         className="h-1 w-1 rounded-full bg-pink-400"

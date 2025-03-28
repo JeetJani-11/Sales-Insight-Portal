@@ -5,12 +5,12 @@ import { extractJsonBlock } from "../utils/extractJsonBlock.js";
 import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
 import { redisClient } from "../index.js";
 const client = new ChromaClient();
-
+console.log(client)
 const router = Router();
 
 router.post("/nextSteps", async (req, res) => {
   try {
-    const { opportunityId, emailMessages, contactDetails } = req.body;
+    const { opportunityId, emailMessages, contacts } = req.body;
 
     const cacheKey = `analytics:nextSteps:${opportunityId}`;
 
@@ -25,7 +25,7 @@ router.post("/nextSteps", async (req, res) => {
       let emails = orderedEmailsByThread[thread];
       let conversation = "";
       for (let email of emails) {
-        const role = contactDetails.some((i) => i.EMAIL === email.FromAddress)
+        const role = contacts.some((i) => i.EMAIL === email.FromAddress)
           ? "customer"
           : "salesAgent";
         conversation += `${role}: ${email.Body}\n`;

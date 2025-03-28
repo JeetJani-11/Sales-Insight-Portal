@@ -1,4 +1,4 @@
-const BACKENDURL = "https://app.mavlon.co/analytics/";
+const BACKENDURL = "http://localhost:3000/";
 
 async function FetchData(url, body) {
   const response = await fetch(url, {
@@ -16,7 +16,7 @@ async function FetchRecentActivities(
   events,
   opportunityId
 ) {
-  return await FetchData(`${BACKENDURL}recent-activities/`, {
+  return await FetchData(`${BACKENDURL}recentActivities/`, {
     accountName: accountName,
     emailMessages: emailMessages,
     events: events,
@@ -24,20 +24,20 @@ async function FetchRecentActivities(
   });
 }
 async function FetchAccountInfo(accountName) {
-  return await FetchData(`${BACKENDURL}account-details/`, {
+  return await FetchData(`${BACKENDURL}accountDetails/`, {
     accountName: accountName,
   });
 }
 
 async function FetchAccountNextStep(contacts, emailMessages, opportunityId) {
-  return await FetchData(`${BACKENDURL}next-steps/`, {
+  return await FetchData(`${BACKENDURL}nextSteps/`, {
     contacts: contacts,
     emailMessages: emailMessages,
     opportunityId: opportunityId,
   });
 }
 async function FetchNeedsAndRisks(contacts, emailMessages, opportunityId) {
-  return await FetchData(`${BACKENDURL}needs-risks/`, {
+  return await FetchData(`${BACKENDURL}needsAndRisk/`, {
     contacts: contacts,
     emailMessages: emailMessages,
     opportunityId: opportunityId,
@@ -45,7 +45,7 @@ async function FetchNeedsAndRisks(contacts, emailMessages, opportunityId) {
 }
 
 async function FetchRecentUpdates(accountDetails) {
-  return await FetchData(`${BACKENDURL}recent-updates/`, {
+  return await FetchData(`${BACKENDURL}recentUpdates/`, {
     accountDetails: accountDetails,
   });
 }
@@ -56,7 +56,7 @@ async function FetchValuePropositions(
   opportunities,
   recentActivities
 ) {
-  return await FetchData(`${BACKENDURL}value-proposition/`, {
+  return await FetchData(`${BACKENDURL}strategy/`, {
     accountName: accountName,
     accountInfo: accountInfo,
     opportunities: opportunities,

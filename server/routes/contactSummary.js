@@ -9,12 +9,12 @@ const openRouterApiKey = process.env.OPENROUTERDEEPSEEK;
 router.post("/contactSummary", async (req, res) => {
   try {
     const emailMessages = req.body.emailMessages;
-    const contactInfo = req.body.contact;
-    const cacheKey = `analytics:contactSummary:${contactInfo.ID}`;
+    const contact = req.body.contact;
+    const cacheKey = `analytics:contactSummary:${contact.ID}`;
 
     const cachedResult = await redisClient.get(cacheKey);
     if (cachedResult) {
-      console.log("Cache hit for Contact Summary", contactInfo.FIRST_NAME);
+      console.log("Cache hit for Contact Summary", contact.FIRST_NAME);
       return res.json(JSON.parse(cachedResult));
     }
     const emailMessagesGroupedByThread = groupEmailsByThread(emailMessages);
@@ -22,7 +22,7 @@ router.post("/contactSummary", async (req, res) => {
     for (const threadId in emailMessagesGroupedByThread) {
       const emails = emailMessagesGroupedByThread[threadId];
       const lastEmailOfThread = emails[emails.length - 1];
-      const lastEmailDate = lastEmailOfThread.MessageDate;
+      const lastEmailDate = lastEmailOfThread.Date;
       latestThreads.push({
         threadId,
         lastEmailDate,
@@ -72,7 +72,7 @@ router.post("/contactSummary", async (req, res) => {
           : "");
     });
 
-    console.log("Successfully fetched contact summary for", contactInfo.ID);
+    console.log("Successfully fetched contact summary for", contact.ID);
     await redisClient.set(cacheKey, JSON.stringify({ updates }), {
       EX: 60 * 60 * 24 * 1000,
     });
@@ -80,7 +80,7 @@ router.post("/contactSummary", async (req, res) => {
     return res.json({ updates });
   } catch (e) {
     console.error("Failed to fetch contact summary", e);
-    return res.json({ error: "Failed to fetch value proposition" });
+    return res.json({ error: "Failed to fetch contact sumary" });
   }
 });
 

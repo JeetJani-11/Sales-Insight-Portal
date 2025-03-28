@@ -4,6 +4,7 @@ import { snowflakeConnection } from "../index.js";
 import { extractJsonBlock } from "../utils/extractJsonBlock.js";
 import { ChromaClient } from "chromadb";
 import { Openperplex } from "openperplex-js";
+import { redisClient } from "../index.js";
 
 const client = new Openperplex(process.env.OPENPREPLEX);
 const chromaClient = new ChromaClient();

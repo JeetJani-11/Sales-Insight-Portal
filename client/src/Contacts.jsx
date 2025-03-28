@@ -44,15 +44,14 @@ export default function Contacts() {
     .map((obj) => {
       obj = { ...obj }; 
 
-      if (obj.MessageDate) {
-        obj.commonDate = new Date(obj.MessageDate);
+      if (obj.Date) {
+        obj.commonDate = new Date(obj.Date);
       } else if (obj.ACTIVITY_DATE_TIME) {
         obj.commonDate = new Date(obj.ACTIVITY_DATE_TIME);
       }
       return obj;
     })
     .sort((a, b) => a.commonDate - b.commonDate);
-
   return (
     <div className="bg-white text-gray-800 h-screen w-screen flex justify-center overflow-hidden">
       <div className="absolute top-4 left-4 flex items-center gap-2">

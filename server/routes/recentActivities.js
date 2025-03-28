@@ -2,12 +2,13 @@ import { Router } from "express";
 import axios from "axios";
 import { extractJsonBlock } from "../utils/extractJsonBlock.js";
 import { groupEmailsByThread } from "../utils/groupEmailsByThread.js";
+import { redisClient } from "../index.js";
 const router = Router();
 
 router.post("/recentActivities", async (req, res) => {
   try {
-    const { accountName, emailMessages, events } = req.body;
-    const cacheKey = `analytics:recentActivities:${accountName}`;
+    const { accountName, emailMessages, events, opportunityId } = req.body;
+    const cacheKey = `analytics:recentActivities:${opportunityId}`;
 
     const cachedResult = await redisClient.get(cacheKey);
     if (cachedResult) {
@@ -19,7 +20,7 @@ router.post("/recentActivities", async (req, res) => {
     for (const threadId in emailMessagesGroupedByThread) {
       const emails = emailMessagesGroupedByThread[threadId];
       const lastEmailOfThread = emails[emails.length - 1];
-      const lastEmailDate = lastEmailOfThread.MessageDate;
+      const lastEmailDate = lastEmailOfThread.Date;
       latestThreads.push({
         threadId,
         lastEmailDate,

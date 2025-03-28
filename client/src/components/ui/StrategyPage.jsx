@@ -44,7 +44,7 @@ export default function StratergyPage() {
         <p className="text-6xl text-black">Strategy</p>
       </div>
       <p className="text-3xl mb-4">Based on</p>
-      {OpportunityName[account.account[0].AccountID] ? (
+      {OpportunityName[account.account.ID] ? (
         <div className="flex flex-wrap gap-2 mb-16">
           {insights.map((insight, index) => (
             <Badge
@@ -55,8 +55,8 @@ export default function StratergyPage() {
                 navigate("/case-study/", { state: insight });
               }}
             >
-              {OpportunityName[account.account[0].AccountID][index]
-                ? OpportunityName[account.account[0].AccountID][index]
+              {OpportunityName[account.account.ID][index]
+                ? OpportunityName[account.account.ID][index]
                 : insight.opportunity.OPPORTUNITY_NAME}
             </Badge>
           ))}

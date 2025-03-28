@@ -12,6 +12,7 @@ import { ScrollArea } from "./scroll-area";
 import DatePickerWithRange from "./DateRangePicker";
 
 export function ActivityFeed({ activities, contact }) {
+  console.log("Activities556", activities);
   const [dateRange, setDateRange] = React.useState([
     subDays(new Date(), 90),
     new Date(),
@@ -45,8 +46,8 @@ export function ActivityFeed({ activities, contact }) {
     if (
       (new Date(activity.ACTIVITY_DATE_TIME) <= dateRange[1] &&
         new Date(activity.ACTIVITY_DATE_TIME) >= dateRange[0]) ||
-      (new Date(activity.MessageDate) <= dateRange[1] &&
-        new Date(activity.MessageDate) >= dateRange[0])
+      (new Date(activity.Date) <= dateRange[1] &&
+        new Date(activity.Date) >= dateRange[0])
     ) {
       return true;
     }
@@ -75,7 +76,7 @@ export function ActivityFeed({ activities, contact }) {
               <li key={index} className="pl-8 relative">
                 <div
                   className={`absolute left-[13px] top-[calc(50%-12px)] h-[24px] w-[24px] rounded-full border-4 border-white shadow-md ${
-                    activity.MessageIdentifier
+                    activity.EmailId
                       ? activity.FromAddress === contact.EMAIL
                         ? "bg-blue-500"
                         : "bg-green-500"
@@ -83,7 +84,7 @@ export function ActivityFeed({ activities, contact }) {
                   }`}
                 />
 
-                {activity.MessageIdentifier ? (
+                {activity.EmailId ? (
                   <>
                     {activity.FromAddress === contact.EMAIL ? (
                       <div className="p-2 rounded ml-2">
@@ -93,20 +94,20 @@ export function ActivityFeed({ activities, contact }) {
                           </span>{" "}
                           sent an email to{" "}
                           <span
-                            key={`${activity.MessageIdentifier}-${index}`}
+                            key={`${activity.EmailId}-${index}`}
                             className="text-blue-600"
                           >
-                            Suchita Jain
+                            Sample Name
                           </span>
                         </p>
                       </div>
                     ) : (
                       <div className="p-2 rounded ml-2">
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Suchita Jain</span> sent
+                          <span className="font-medium">Sample Name Jain</span> sent
                           an email to{" "}
                           <span
-                            key={`${activity.MessageIdentifier}-${index}`}
+                            key={`${activity.EmailId}-${index}`}
                             className="text-green-600"
                           >
                             {contact.FIRST_NAME} {contact.LAST_NAME}
@@ -118,7 +119,7 @@ export function ActivityFeed({ activities, contact }) {
                 ) : (
                   <div className="p-2 rounded ml-2">
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Suchita Jain</span> had a
+                      <span className="font-medium">Sample Name Jain</span> had a
                       meeting with{" "}
                       <span className="text-yellow-600">
                         {contact.FIRST_NAME} {contact.LAST_NAME}

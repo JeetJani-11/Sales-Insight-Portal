@@ -6,7 +6,7 @@ export function LatestConversation({ emailMessage, contactInfo }) {
   const [convoSnapShot, setConvoSnapShot] = useState(null);
   async function FetchConversationSummary(emailMessage, contactInfo) {
     const response = await fetch(
-      "https://app.mavlon.co/analytics/contact-summary/",
+      "http://localhost:3000/contactSummary",
       {
         method: "POST",
         headers: {
@@ -22,15 +22,18 @@ export function LatestConversation({ emailMessage, contactInfo }) {
   }
   useEffect(() => {
     FetchConversationSummary(emailMessage, contactInfo).then((data) => {
-      setConvoSnapShot(data.update);
+      setConvoSnapShot(data.updates);
     });
   }, []);
 
   return (
-    <Card className="w-full rounded-3xl" style={{
-      height: "100%",
-      width: "100%",
-    }}>
+    <Card
+      className="w-full rounded-3xl"
+      style={{
+        height: "100%",
+        width: "100%",
+      }}
+    >
       <CardHeader className="pb-3">
         <CardTitle className="text-l text-gray-900">
           Summary of Recent Interaction

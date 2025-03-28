@@ -108,8 +108,8 @@ function App() {
       account.emailMessages[opportunity.ID],
       opportunity.ID
     ).then((data) => {
-      if (data.next_steps.length > 3) {
-        data.next_steps = data.next_steps.slice(0, 3);
+      if (data.nextSteps.length > 3) {
+        data.nextSteps = data.nextSteps.slice(0, 3);
       }
       dispatch(setNextSteps(data));
     });
@@ -120,11 +120,11 @@ function App() {
     ).then((data) => {
       dispatch(setNeedsAndRisks(data));
     });
-    FetchRecentUpdates(account.account[0]).then((data) => {
-      if (data.metaData.length > 4) {
-        data.metaData = data.metaData.slice(0, 4);
+    FetchRecentUpdates(account.account).then((data) => {
+      if (data.updates.length > 4) {
+        data.updates = data.updates.slice(0, 4);
       }
-      dispatch(setRecentUpdates(data.metaData));
+      dispatch(setRecentUpdates(data.updates));
     });
     FetchRecentActivities(
       accountName,
@@ -205,23 +205,21 @@ function App() {
                 <div className="flex flex-wrap items-end gap-6 mb-16">
                   <Avatar className="h-16 w-16">
                     <AvatarImage
-                      src={`https://cdn.brandfetch.io/${account.account[0].Website}?c=1idaroPYX6MwOp6glye`}
+                      src={`https://cdn.brandfetch.io/${account.account.Website}?c=1idaroPYX6MwOp6glye`}
                     />
-                    <AvatarFallback>
-                      {account.account[0].Name[0]}
-                    </AvatarFallback>
+                    <AvatarFallback>{account.account.Name}</AvatarFallback>
                   </Avatar>
                   <div className="flex-grow">
                     <span className="text-6xl text-black">
-                      {account.account[0].Name}
+                      {account.account.Name}
                     </span>
                   </div>
                   <div className="flex flex-col items-end sm:items-start">
                     <h2 className="text-lg font-medium text-black">
-                      {account.owner[0].NAME}
+                      {account.owner.NAME}
                     </h2>
                     <p className="text-gray-600 text-sm break-words">
-                      {account.owner[0].EMAIL}
+                      {account.owner.EMAIL}
                     </p>
                   </div>
                 </div>

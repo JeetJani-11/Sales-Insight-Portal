@@ -23,7 +23,7 @@ export function ProfileHeader({ contactInfo, account, avatar }) {
           </h1>
           <p className="text-sm text-gray-500">{contactInfo.DEPARTMENT}</p>
           <div className="flex items-center gap-2 justify-end sm:justify-start text-sm text-gray-500">
-            <span>{account.account[0].Name}</span>
+            <span>{account.account.Name}</span>
             <Mail className="h-4 w-4" />
           </div>
         </div>

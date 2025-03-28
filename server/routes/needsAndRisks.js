@@ -18,7 +18,7 @@ router.post("/needsAndRisk", async (req, res) => {
 
     const cachedResult = await redisClient.get(cacheKey);
     if (cachedResult) {
-      console.log("Cache hit for Needs and Risk", accountInfo.Name);
+      console.log("Cache hit for Needs and Risk", opportunityId);
       return res.json(JSON.parse(cachedResult));
     }
     const emailGroupByThreadIdentifier = groupEmailsByThread(emailDetails);

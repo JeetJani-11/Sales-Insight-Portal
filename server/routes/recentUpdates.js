@@ -1,11 +1,12 @@
 import { Router } from "express";
 import axios from "axios";
 import { Openperplex } from "openperplex-js";
+import { redisClient } from "../index.js";
 const router = Router();
 const client = new Openperplex(process.env.OPENPREPLEX);
-router.get("/recentUpdates", async (req, res) => {
+router.post("/recentUpdates", async (req, res) => {
   try {
-    let accountName = req.query.accountName;
+    let accountName = req.body.accountDetails.Name;
     const cacheKey = `analytics:recentUpdates:${accountName}`;
 
     const cachedResult = await redisClient.get(cacheKey);
@@ -29,10 +30,25 @@ router.get("/recentUpdates", async (req, res) => {
       }
     );
 
+    const metaData = await Promise.all(
+      result.sources.map(async (update) => {
+        try {
+          const response = await axios.get(
+            `https://api.linkpreview.net/?key=${process.env.LINKPREVIEWKEY}&q=${update.link}`
+          );
+          return response.data;
+        } catch (e) {
+          console.error(`Failed to fetch metadata for ${update.link}:`, e.message);
+          return null; 
+        }
+      })
+    );
+    
+    const filteredMetaData = metaData.filter((data) => data !== null);
     await redisClient.set(
       cacheKey,
       JSON.stringify({
-        updates: result.sources,
+        updates: filteredMetaData,
       }),
       {
         EX: 60 * 60 * 24 * 1000,
@@ -40,7 +56,7 @@ router.get("/recentUpdates", async (req, res) => {
     );
 
     return res.json({
-      updates: result.sources,
+      updates: filteredMetaData,
     });
   } catch (err) {
     console.error("Error getting recent updates", err);
