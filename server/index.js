@@ -11,8 +11,8 @@ import RecentActivitiesRouter from "./routes/recentActivities.js";
 import SearchRouter from "./routes/search.js";
 import StrategyRouter from "./routes/strategy.js";
 import { createClient } from "redis";
-import { ChromaClient } from "chromadb";
 
+const port = process.env.PORT || 3000;
 const redisClient = createClient({
   username: "default",
   password: process.env.REDISPASS,
@@ -53,7 +53,7 @@ snowflakeConnection.connect((err, conn) => {
   }
 });
 
-app.listen(3000, () => {
+app.listen(port, () => {
   console.log("Server is running on http://localhost:3000");
 });
 
