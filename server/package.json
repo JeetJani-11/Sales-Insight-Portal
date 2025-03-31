@@ -5,15 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "prod": "chroma run --path ./chroma && node index.js"
   },
   "type": "module",
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chromadb": "^2.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "nodemon": "^3.1.9",
     "openperplex-js": "^1.0.2",
     "redis": "^4.7.0",
     "snowflake-sdk": "^2.0.3"
