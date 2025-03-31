@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "prod": "npm i && chroma run --path ./chroma && node index.js"
+    "prod": "chroma run --path ./chroma && node index.js"
   },
   "type": "module",
   "author": "",
