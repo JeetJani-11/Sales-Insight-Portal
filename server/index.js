@@ -12,7 +12,7 @@ import SearchRouter from "./routes/search.js";
 import StrategyRouter from "./routes/strategy.js";
 import { createClient } from "redis";
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000 ;
 const redisClient = createClient({
   username: "default",
   password: process.env.REDISPASS,
