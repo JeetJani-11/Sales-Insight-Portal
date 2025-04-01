@@ -12,7 +12,7 @@ import SearchRouter from "./routes/search.js";
 import StrategyRouter from "./routes/strategy.js";
 import { createClient } from "redis";
 
-const port = process.env.PORT || 10000 ;
+const port = process.env.PORT || 3000 ;
 const redisClient = createClient({
   username: "default",
   password: process.env.REDISPASS,
@@ -27,6 +27,7 @@ await redisClient.connect();
 
 const app = express();
 app.use(cors());
+app.options('*', cors())
 app.use(express.json());
 app.use(AccountRouter);
 app.use(NeedsAndRiskRouter);
