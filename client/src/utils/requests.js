@@ -1,4 +1,4 @@
-const BACKENDURL = "http://localhost:3000/";
+const BACKENDURL = "http://3.80.188.57/";
 
 async function FetchData(url, body) {
   const response = await fetch(url, {

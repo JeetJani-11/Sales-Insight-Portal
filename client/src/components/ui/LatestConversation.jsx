@@ -6,7 +6,7 @@ export function LatestConversation({ emailMessage, contactInfo }) {
   const [convoSnapShot, setConvoSnapShot] = useState(null);
   async function FetchConversationSummary(emailMessage, contactInfo) {
     const response = await fetch(
-      "http://localhost:3000/contactSummary",
+      "http://3.80.188.57/contactSummary",
       {
         method: "POST",
         headers: {
