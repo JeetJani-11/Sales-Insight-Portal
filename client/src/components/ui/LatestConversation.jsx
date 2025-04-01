@@ -6,7 +6,7 @@ export function LatestConversation({ emailMessage, contactInfo }) {
   const [convoSnapShot, setConvoSnapShot] = useState(null);
   async function FetchConversationSummary(emailMessage, contactInfo) {
     const response = await fetch(
-      "https://edc1-3-80-188-57.ngrok-free.app/contactSummary",
+      "https://3d5d-3-80-188-57.ngrok-free.app/contactSummary",
       {
         method: "POST",
         headers: {
