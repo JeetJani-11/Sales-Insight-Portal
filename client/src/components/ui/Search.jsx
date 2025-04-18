@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { Button } from "./button";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 const BACKENDURL =
-  "https://680a-44-202-48-12.ngrok-free.app/";
+  "https://c8a6-2405-201-2021-e8d3-35b7-b274-67a3-736b.ngrok-free.app/";
 export default function SearchInterface({ setAccountName }) {
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState([]);

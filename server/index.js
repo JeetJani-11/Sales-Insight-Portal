@@ -12,13 +12,13 @@ import SearchRouter from "./routes/search.js";
 import StrategyRouter from "./routes/strategy.js";
 import { createClient } from "redis";
 
-const port = process.env.PORT || 3000 ;
+const port = process.env.PORT || 3001 ;
 const redisClient = createClient({
   username: "default",
   password: process.env.REDISPASS,
   socket: {
     host: process.env.REDISHOST,
-    port: 16950,
+    port: 13618,
   },
 });
 redisClient.on("error", (err) => console.log("Redis Client Error", err));

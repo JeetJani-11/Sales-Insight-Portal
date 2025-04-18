@@ -25,11 +25,11 @@ export default function NavBar({
         className="flex items-center gap-2 cursor-pointer hover:text-gray-500 md:flex-none md:mr-auto mb-2 md:mb-0"
         onClick={onHomeClick}
       >
-        <Avatar className="h-10 w-10">
-          <AvatarImage src="./mavlon-logo.png" />
+        {/* <Avatar className="h-10 w-10">
+          <AvatarImage src="./icon.png" />
           <AvatarFallback>M</AvatarFallback>
-        </Avatar>
-        <span className="text-gray-800 text-2xl">Mavlon</span>
+        </Avatar> */}
+        <span className="text-gray-800 text-2xl">Sales Insight Portal</span>
       </div>
 
       {account.exists && opportunity && (
